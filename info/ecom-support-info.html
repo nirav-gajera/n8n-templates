@@ -1,0 +1,114 @@
+<div class="guide-kicker guide-kicker-top">Flowcraft / n8n workflow guide</div>
+<div class="content-styles type-body-xl">
+    <div class="">
+        <h1>Telegram E-Commerce Customer Support Bot with AI Agent &amp; Google Sheets</h1>
+        <p>An AI-powered Telegram bot that automates customer support for e-commerce stores — handling order tracking,
+            order cancellations, and support ticket creation, all without human intervention.</p>
+        <p>Built with a <strong>Gemini AI Agent + Simple Memory</strong>, the bot understands natural language,
+            remembers the conversation context per user, and reads/writes directly to your Google Sheets — no database
+            or backend required.</p>
+
+        <h2>How It Works</h2>
+        <ul>
+            <li>A customer messages the Telegram bot or taps a menu button</li>
+            <li>The <strong>AI Agent</strong> (powered by Google Gemini) reads the message and decides what to do</li>
+            <li><strong>Simple Memory</strong> keeps track of the full conversation per user, so the bot never forgets
+                context mid-flow</li>
+            <li>The agent calls one of three Google Sheets tools depending on intent:
+                <ul>
+                    <li><strong>Read Orders Sheet</strong> — looks up order details by Order ID or email</li>
+                    <li><strong>Update Order Status</strong> — sets an order's status to <code>Cancelled</code> after
+                        confirmation</li>
+                    <li><strong>Create Support Ticket</strong> — appends a new ticket row to the support sheet with
+                        auto-categorisation</li>
+                </ul>
+            </li>
+            <li>The response is sent back to the user via Telegram</li>
+        </ul>
+
+        <h2>How to Use</h2>
+        <p><strong>Step 1 — Create a Telegram Bot</strong><br>
+            Open <a href="https://t.me/BotFather" rel="ugc nofollow" target="_blank">@BotFather</a> on Telegram, run
+            <code>/newbot</code>, and copy your bot token. Add it as a Telegram credential in n8n.</p>
+        <p><strong>Step 2 — Set Up Google Sheets</strong></p>
+        <p>Create a Google Spreadsheet with two sheets (tabs):</p>
+        <p><em>Sheet 1 — <code>Sheet1</code> (Orders):</em><br>
+            | order_id | customer_name | email | product | Status | date |</p>
+        <p><em>Sheet 2 — <code>Sheet1</code> (Support Tickets — separate spreadsheet):</em><br>
+            | ticket_id | name | order_id | query | summary | category | status | created_at | telegram_id |</p>
+        <p><strong>Step 3 — Add Credentials in n8n</strong></p>
+        <ul>
+            <li><strong>Telegram Bot</strong> — paste your BotFather token</li>
+            <li><strong>Google Sheets OAuth2</strong> — connect your Google account</li>
+            <li><strong>Google Gemini (PaLM API)</strong> — add your API key from <a
+                    href="https://aistudio.google.com/app/apikey" rel="ugc nofollow" target="_blank">Google AI
+                    Studio</a></li>
+        </ul>
+        <p><strong>Step 4 — Update Sheet IDs</strong><br>
+            In the three Google Sheets tool nodes, replace the <code>documentId</code> values with your actual
+            spreadsheet IDs (found in the Google Sheets URL).</p>
+        <p><strong>Step 5 — Activate &amp; Register Webhook</strong><br>
+            Activate the workflow in n8n. If running locally, use <a href="https://ngrok.com" rel="ugc nofollow"
+                target="_blank">ngrok</a> to expose your n8n port over HTTPS, then register the webhook:</p>
+        <code>https://api.telegram.org/bot&amp;lt;YOUR_TOKEN&amp;gt;/setWebhook?url=https://&amp;lt;YOUR_NGROK_URL&amp;gt;/webhook/telegram-ecom-bot
+</code>
+        <p><strong>Step 6 — Test</strong><br>
+            Open your bot in Telegram and send <code>/start</code>. You should see the welcome message with three menu
+            buttons.</p>
+
+        <h2>Requirements</h2>
+        <ul>
+            <li>n8n (self-hosted or cloud)</li>
+            <li>Telegram Bot (via BotFather — free)</li>
+            <li>Google account with access to Google Sheets</li>
+            <li>Google Gemini API key (free tier available at <a href="https://aistudio.google.com" rel="ugc nofollow"
+                    target="_blank">aistudio.google.com</a>)</li>
+        </ul>
+
+        <h2>Customising This Workflow</h2>
+        <ul>
+            <li><strong>Change the LLM</strong> — swap Google Gemini for OpenAI GPT-4o or any other n8n-supported model
+                by replacing the <code>Google Gemini Chat Model</code> node</li>
+            <li><strong>Add more menu options</strong> — extend the <code>/start</code> welcome node with additional
+                inline keyboard buttons and update the system prompt to handle new intents</li>
+            <li><strong>Add manager notifications</strong> — connect a Telegram or email node after the
+                <code>Create Support Ticket</code> tool to notify your team when a new ticket is raised</li>
+            <li><strong>Use a database instead of Sheets</strong> — replace the Google Sheets tool nodes with PostgreSQL
+                or MySQL nodes for higher-volume production use</li>
+            <li><strong>Change cancellation rules</strong> — edit the system prompt to block cancellations for different
+                statuses (e.g. block <code>Ready</code> in addition to <code>Shipped</code>)</li>
+            <li><strong>Add order lookup by phone number</strong> — extend the orders sheet with a <code>phone</code>
+                column and update the system prompt accordingly</li>
+        </ul>
+    </div>
+</div>
+<style>
+:root{--paper:#f5f7f2;--ink:#18221f;--muted:#53635c;--line:#dbe3dc;--green:#1e5844;--soft:#edf3eb;--lime:#d7f36b}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"DM Sans",sans-serif;font-size:15px;line-height:1.7}
+.content-styles{max-width:720px;margin:0 auto;padding:4px 0 44px}
+.guide-kicker{max-width:720px;margin:0 auto 8px;color:var(--green);font:600 11px "Courier New",monospace;letter-spacing:.12em;text-transform:uppercase}
+.content-styles ~ .guide-kicker{display:none}
+h1,h2,h3,h4{color:var(--ink);font-family:Arial,"DM Sans",sans-serif;letter-spacing:-.035em;line-height:1.2}
+h1{font-size:32px;margin:0 0 14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h2{font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:24px 0 7px}
+p,li{color:var(--muted)}
+strong{color:var(--ink)}
+a{color:var(--green);font-weight:600}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+code{background:#e5eee5;border:1px solid #d6e4d6;border-radius:5px;color:var(--green);padding:2px 6px;font:13px "Courier New",monospace}
+pre,body>code,.content-styles>code{display:block;overflow:auto;background:#18221f;color:#eaf2e8;border-radius:9px;padding:16px 18px;font:12px/1.65 "Courier New",monospace;white-space:pre-wrap}
+.content-table{margin:16px 0 22px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:480px;font-size:13px}
+th{background:var(--soft);color:var(--green);font-weight:700;text-align:left}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:18px 0;padding:12px 16px;border-left:3px solid var(--lime);background:var(--soft);color:var(--muted)}
+img{max-width:100%;height:auto;border-radius:8px}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+@media(max-width:560px){body{font-size:14px}.content-styles{padding-bottom:28px}h1{font-size:26px}h2{font-size:20px}table{min-width:420px}}
+</style>
+<div class="guide-kicker">Flowcraft / n8n workflow guide</div>

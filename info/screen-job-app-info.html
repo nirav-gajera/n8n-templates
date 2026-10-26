@@ -1,0 +1,582 @@
+<div class="guide-kicker guide-kicker-top">Flowcraft / n8n workflow guide</div>
+<div class="content-styles type-body-xl">
+    <div class="">
+        <h1>🤖 AI Resume Screener — Google Forms to Automated Shortlisting &amp; Email</h1>
+        <h3>Automatically score every job application with AI, update your tracking sheet, and send personalised emails
+            to candidates — all without human review.</h3>
+
+        <h2>📖 Description</h2>
+        <p>This workflow automates your entire first-round resume screening process. When a candidate submits your
+            Google Form application, the workflow triggers, extracts their details, scores them against the job
+            description using AI, writes the results back to your Google Sheet, and sends the right email — a
+            congratulations to shortlisted candidates, a polite rejection to others.</p>
+        <p><strong>Your HR team only reviews candidates the AI has already scored 7 or above.</strong></p>
+        <p>Built for companies hiring across multiple roles simultaneously, HR teams wanting to reduce screening time,
+            and startups with no dedicated recruiting staff.</p>
+
+        <h2>✨ Key Features</h2>
+        <ul>
+            <li><strong>Google Sheets Trigger</strong> — fires automatically when a new application row is added</li>
+            <li><strong>Duplicate prevention</strong> — tracks processed rows with a <code>Processed</code> column,
+                never scores the same application twice</li>
+            <li><strong>Multi-role support</strong> — built-in Job Description map for 5 roles, easily extendable</li>
+            <li><strong>AI scoring 1–10</strong> — Google Gemini scores each candidate against the JD with strengths,
+                weaknesses, recommendation</li>
+            <li><strong>Direct sheet write via API</strong> — writes score + grade + status to exact row using Google
+                Sheets API</li>
+            <li><strong>Smart email routing</strong> — score ≥ 7 → shortlisted (HR alert + candidate email), score &lt;
+                7 → rejection email</li>
+            <li><strong>Rate limit protection</strong> — Wait node between HR alert and candidate email prevents SMTP
+                throttling</li>
+            <li><strong>Robust AI parsing</strong> — 3-layer fallback ensures AI output always produces a usable result
+            </li>
+        </ul>
+
+        <h2>🔄 How It Works</h2>
+        <code>New Google Form submission
+          ↓
+Google Sheets Trigger (rowAdded, polls every minute)
+          ↓
+Read All Rows → Filter Unprocessed Rows (col_18 / Processed ≠ 1)
+          ↓
+Extract Fields + Load Job Description
+  → name, email, phone, position, experience, skills, cover note
+  → loads matching JD from built-in map
+          ↓
+AI Resume Scorer (Google Gemini)
+  → score: 1–10
+  → grade: Strong Yes / Maybe / No
+  → strengths, weaknesses, recommendation, summary
+          ↓
+Parse AI Output (3-layer fallback)
+          ↓
+Build Sheet Request → Write to Sheet via API
+  → writes score, grade, strengths, weaknesses,
+    recommendation, summary, status, timestamp, Processed=1
+          ↓
+Score ≥ 7?
+  ✅ YES → Alert Email to HR + Wait 10s → Shortlist Email to Candidate
+  ❌ NO  → Rejection Email to Candidate
+</code>
+
+        <h2>🤖 AI Scoring System</h2>
+        <p>The AI scores each candidate from <strong>1 to 10</strong> against the job description:</p>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>8–10</td>
+                            <td>Strong Yes</td>
+                            <td>Shortlisted ✅</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>Strong Yes / Maybe</td>
+                            <td>Shortlisted ✅</td>
+                        </tr>
+                        <tr>
+                            <td>5–6</td>
+                            <td>Maybe</td>
+                            <td>Rejected ❌</td>
+                        </tr>
+                        <tr>
+                            <td>1–4</td>
+                            <td>No</td>
+                            <td>Rejected ❌</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p>For each application the AI also provides:</p>
+        <ul>
+            <li><strong>Strengths</strong> — what the candidate does well vs the JD</li>
+            <li><strong>Weaknesses</strong> — gaps or concerns</li>
+            <li><strong>Recommendation</strong> — e.g. "Invite for technical interview"</li>
+            <li><strong>Summary</strong> — 2–3 sentence overall assessment</li>
+        </ul>
+
+        <h2>📋 Built-in Job Descriptions</h2>
+        <p>Five roles are pre-configured and auto-matched by position name:</p>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Key Requirements</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Frontend Developer</td>
+                            <td>2+ yrs React/Vue, HTML/CSS/JS, REST APIs, Git</td>
+                        </tr>
+                        <tr>
+                            <td>Backend Developer</td>
+                            <td>2+ yrs Node.js/Python/Java, PostgreSQL/MongoDB, Docker</td>
+                        </tr>
+                        <tr>
+                            <td>UI/UX Designer</td>
+                            <td>2+ yrs UI/UX, Figma or Adobe XD, portfolio</td>
+                        </tr>
+                        <tr>
+                            <td>Project Manager</td>
+                            <td>3+ yrs PM, PMP/Scrum preferred, Jira/Asana</td>
+                        </tr>
+                        <tr>
+                            <td>Digital Marketing Executive</td>
+                            <td>2+ yrs digital marketing, Google Ads, Meta Ads, GA4</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p>Add more roles by editing the <code>JD_MAP</code> object in the <strong>Extract Fields + Load JD</strong>
+            node.</p>
+
+        <h2>📧 Email Templates</h2>
+        <h3>Shortlist Email (to candidate)</h3>
+        <ul>
+            <li>Subject: <code>Congratulations [Name] - You have been shortlisted!</code></li>
+            <li>Navy blue header</li>
+            <li>Score table (score/10, grade, position, experience, skills)</li>
+            <li>Strengths highlighted in green</li>
+            <li>AI assessment in blue</li>
+            <li>Promise: HR contacts within 2 business days</li>
+        </ul>
+        <h3>HR Alert Email (internal)</h3>
+        <ul>
+            <li>Subject: <code>Strong Candidate - [Name] for [Position]</code></li>
+            <li>Amber header — urgent feel</li>
+            <li>Full candidate details + complete AI breakdown</li>
+            <li>Strengths, weaknesses, recommendation, summary all included</li>
+        </ul>
+        <h3>Rejection Email (to candidate)</h3>
+        <ul>
+            <li>Subject: <code>Your application for [Position] - Update</code></li>
+            <li>Grey header — professional and neutral</li>
+            <li>Polite decline with encouragement</li>
+            <li>No score or feedback shared</li>
+        </ul>
+
+        <h2>🛠 Setup Requirements</h2>
+        <h3>1. Google Form</h3>
+        <p>Create a Google Form with these fields:</p>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Full Name</td>
+                            <td>Short answer</td>
+                        </tr>
+                        <tr>
+                            <td>Email Address</td>
+                            <td>Short answer</td>
+                        </tr>
+                        <tr>
+                            <td>Phone Number</td>
+                            <td>Short answer</td>
+                        </tr>
+                        <tr>
+                            <td>Select the Position You Are Applying For</td>
+                            <td>Dropdown</td>
+                        </tr>
+                        <tr>
+                            <td>Years of Experience</td>
+                            <td>Short answer</td>
+                        </tr>
+                        <tr>
+                            <td>Relevant Skills</td>
+                            <td>Long answer</td>
+                        </tr>
+                        <tr>
+                            <td>Cover Note</td>
+                            <td>Long answer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p>Link the form to a Google Sheet (Responses tab).</p>
+        <h3>2. Google Sheet — Response Sheet Columns</h3>
+        <p>The form creates columns A–H automatically. Add these columns manually for AI results:</p>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Col</th>
+                            <th>Header</th>
+                            <th>Filled by</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>A</td>
+                            <td>Timestamp</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>B</td>
+                            <td>Select the Position...</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>Full Name</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>Email Address</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>E</td>
+                            <td>Phone Number</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>F</td>
+                            <td>Years of Experience</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td>Relevant Skills</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>H</td>
+                            <td>Upload CV</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>I</td>
+                            <td>Cover Note</td>
+                            <td>Google Forms</td>
+                        </tr>
+                        <tr>
+                            <td>J</td>
+                            <td>AI Score</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>Grade</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>L</td>
+                            <td>Strengths</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>M</td>
+                            <td>Weaknesses</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>N</td>
+                            <td>Recommendation</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>O</td>
+                            <td>Summary</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>P</td>
+                            <td>Status</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>Q</td>
+                            <td>Processed At</td>
+                            <td>This workflow</td>
+                        </tr>
+                        <tr>
+                            <td>R</td>
+                            <td>Processed</td>
+                            <td>This workflow (1 = done)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p><strong>Important:</strong> The workflow uses column R (<code>Processed</code>) to track which rows have been
+            scored. Rows where R = 1 are skipped on subsequent triggers.</p>
+
+        <h3>3. Credentials Required</h3>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Credential</th>
+                            <th>Used for</th>
+                            <th>Free?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Google Sheets Trigger OAuth2</strong></td>
+                            <td>Detects new rows</td>
+                            <td>Free</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Google Sheets OAuth2</strong></td>
+                            <td>Read rows + write results</td>
+                            <td>Free</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Google Gemini (PaLM) API</strong></td>
+                            <td>AI resume scoring</td>
+                            <td>Free tier available</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SMTP</strong></td>
+                            <td>Sending emails</td>
+                            <td>Depends on provider</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <h3>4. Update Sheet ID</h3>
+        <p>In the <strong>Read All Rows</strong> and <strong>Write to Sheet via API</strong> nodes, replace the Sheet ID
+            with your own:</p>
+        <code>https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/...
+</code>
+        <h3>5. Update Email Addresses</h3>
+        <p>In all three email nodes, update:</p>
+        <ul>
+            <li><code>fromEmail</code> — your HR sending address</li>
+            <li>HR alert <code>toEmail</code> — your internal HR inbox</li>
+            <li>SMTP credential — your email provider</li>
+        </ul>
+
+        <h2>⚙️ Workflow Nodes</h2>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Node</th>
+                            <th>Type</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Google Sheets Trigger</td>
+                            <td>Trigger</td>
+                            <td>Fires on new row (polls every minute)</td>
+                        </tr>
+                        <tr>
+                            <td>Read All Rows</td>
+                            <td>Google Sheets</td>
+                            <td>Reads all form responses</td>
+                        </tr>
+                        <tr>
+                            <td>Filter Unprocessed Rows</td>
+                            <td>Code</td>
+                            <td>Skips rows where Processed = 1</td>
+                        </tr>
+                        <tr>
+                            <td>Extract Fields + Load JD</td>
+                            <td>Code</td>
+                            <td>Extracts candidate data + matches JD</td>
+                        </tr>
+                        <tr>
+                            <td>AI Resume Scorer</td>
+                            <td>AI Agent</td>
+                            <td>Scores candidate vs JD using Gemini</td>
+                        </tr>
+                        <tr>
+                            <td>Google Gemini Chat Model</td>
+                            <td>LLM</td>
+                            <td>AI model for scoring</td>
+                        </tr>
+                        <tr>
+                            <td>Parse AI Output</td>
+                            <td>Code</td>
+                            <td>Parses JSON with 3-layer fallback</td>
+                        </tr>
+                        <tr>
+                            <td>Build Sheet Request</td>
+                            <td>Code</td>
+                            <td>Prepares API write request for exact row</td>
+                        </tr>
+                        <tr>
+                            <td>Write to Sheet via API</td>
+                            <td>HTTP Request</td>
+                            <td>Writes results to columns J–R</td>
+                        </tr>
+                        <tr>
+                            <td>Score ≥ 7?</td>
+                            <td>IF</td>
+                            <td>Routes by score</td>
+                        </tr>
+                        <tr>
+                            <td>Alert Email - HR Team</td>
+                            <td>Email Send</td>
+                            <td>Notifies HR of strong candidates</td>
+                        </tr>
+                        <tr>
+                            <td>Wait 10s</td>
+                            <td>Wait</td>
+                            <td>Prevents SMTP rate limiting</td>
+                        </tr>
+                        <tr>
+                            <td>Shortlist Email - Candidate</td>
+                            <td>Email Send</td>
+                            <td>Congratulations to shortlisted</td>
+                        </tr>
+                        <tr>
+                            <td>Rejection Email - Candidate</td>
+                            <td>Email Send</td>
+                            <td>Polite rejection to others</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2>🔑 Key Technical Details</h2>
+        <p><strong>Why HTTP Request for sheet write instead of Google Sheets node?</strong><br>
+            The standard Google Sheets node cannot reliably write to a specific row by row number. Using the Sheets API
+            <code>PUT values/{range}</code> endpoint writes to the exact cell range
+            <code>Form responses 1!J{rowNum}:R{rowNum}</code> — always the correct row regardless of concurrent
+            submissions.</p>
+        <p><strong>Why Read All Rows then Filter instead of reading one row?</strong><br>
+            The Google Sheets Trigger fires on rowAdded but may not pass the exact new row data reliably. Reading all
+            rows and filtering by <code>Processed ≠ 1</code> is more reliable and handles backlog processing too.</p>
+        <p><strong>The <code>Processed</code> column (R)</strong><br>
+            Set to <code>1</code> after scoring completes. This prevents re-processing if the trigger fires again before
+            the workflow finishes, or if old unprocessed rows exist.</p>
+        <p><strong>3-layer AI output fallback:</strong></p>
+        <ol>
+            <li>Direct JSON parse</li>
+            <li>Strip markdown fences then parse</li>
+            <li>Regex extract JSON block</li>
+            <li>Default values if all fail (score: 5, grade: Maybe)</li>
+        </ol>
+
+        <h2>📊 Sample Sheet Output After Scoring</h2>
+        <code>Col J  (AI Score):      8
+Col K  (Grade):         Strong Yes
+Col L  (Strengths):     3+ yrs React experience; Strong TypeScript skills; Relevant API work
+Col M  (Weaknesses):    No Docker experience mentioned; No TypeScript explicitly listed
+Col N  (Recommendation): Invite for technical interview
+Col O  (Summary):       Strong frontend candidate with solid React/Vue background. Experience aligns well with role requirements. Minor gaps in DevOps knowledge.
+Col P  (Status):        Shortlisted
+Col Q  (Processed At):  2026-03-18T10:30:00.000Z
+Col R  (Processed):     1
+</code>
+
+        <h2>🔧 Customisation</h2>
+        <p><strong>Add more roles:</strong><br>
+            Edit the <code>JD_MAP</code> object in <strong>Extract Fields + Load JD</strong>:</p>
+        <code>const JD_MAP = {
+  'Your New Role': 'ROLE: ... REQUIREMENTS: ...',
+  // add as many as needed
+};
+</code>
+        <p><strong>Change the score threshold:</strong><br>
+            In the <strong>Score ≥ 7?</strong> IF node, change <code>rightValue: 5</code> to any number. Setting to
+            <code>8</code> makes the bar higher (only Strong Yes candidates shortlisted).</p>
+        <p><strong>Add a second HR alert channel:</strong><br>
+            After the HR Alert Email, add a Slack or Telegram node to ping your team instantly for high-scoring
+            candidates.</p>
+        <p><strong>Add calendar booking link:</strong><br>
+            Include a Calendly link in the shortlist email so candidates can self-schedule interviews immediately.</p>
+        <p><strong>Extend with CV parsing:</strong><br>
+            Add a Google Drive node before the AI scorer to download the CV attachment, extract text, and include it in
+            the AI prompt for more accurate scoring.</p>
+
+        <h2>⚠️ Important Notes</h2>
+        <ul>
+            <li>The Google Sheets Trigger polls every minute — there may be up to a 1-minute delay after form submission
+                before scoring begins</li>
+            <li>The <code>Processed</code> column must exist in your sheet (column R) before activating the workflow
+            </li>
+            <li>Trailing spaces in Google Forms column headers are common — the <code>key.trim()</code> normalization in
+                the code handles this automatically</li>
+            <li>The Wait node between HR alert and shortlist email is intentional — prevents hitting SMTP rate limits
+                when processing multiple candidates</li>
+        </ul>
+
+        <h2>💡 Enhancement Ideas</h2>
+        <ul>
+            <li><strong>CV download + parse</strong> — download Google Drive CV attachment and include content in AI
+                scoring</li>
+            <li><strong>Calendly integration</strong> — auto-create interview slot and include booking link in shortlist
+                email</li>
+            <li><strong>Slack alert</strong> — instant Slack message to hiring manager for score ≥ 9 candidates</li>
+            <li><strong>Airtable sync</strong> — mirror all candidate data to an Airtable CRM for pipeline tracking</li>
+            <li><strong>Telegram bot</strong> — let HR check candidate status by texting a bot with the candidate email
+            </li>
+            <li><strong>Multi-stage pipeline</strong> — add a second workflow that triggers when HR marks a candidate
+                for second round</li>
+        </ul>
+
+        <h2>📦 Requirements Summary</h2>
+        <ul>
+            <li>n8n (cloud or self-hosted)</li>
+            <li>Google Workspace account (Forms + Sheets)</li>
+            <li>Google AI Studio account for Gemini API key (free tier available)</li>
+            <li>SMTP email account (Gmail, SendGrid, Mailtrap etc.)</li>
+        </ul>
+
+        <p><em>Built with n8n · Google Gemini AI · Google Forms · Google Sheets · SMTP</em></p>
+    </div>
+</div>
+<style>
+:root{--paper:#f5f7f2;--ink:#18221f;--muted:#53635c;--line:#dbe3dc;--green:#1e5844;--soft:#edf3eb;--lime:#d7f36b}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"DM Sans",sans-serif;font-size:15px;line-height:1.7}
+.content-styles{max-width:720px;margin:0 auto;padding:4px 0 44px}
+.guide-kicker{max-width:720px;margin:0 auto 8px;color:var(--green);font:600 11px "Courier New",monospace;letter-spacing:.12em;text-transform:uppercase}
+.content-styles ~ .guide-kicker{display:none}
+h1,h2,h3,h4{color:var(--ink);font-family:Arial,"DM Sans",sans-serif;letter-spacing:-.035em;line-height:1.2}
+h1{font-size:32px;margin:0 0 14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h2{font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:24px 0 7px}
+p,li{color:var(--muted)}
+strong{color:var(--ink)}
+a{color:var(--green);font-weight:600}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+code{background:#e5eee5;border:1px solid #d6e4d6;border-radius:5px;color:var(--green);padding:2px 6px;font:13px "Courier New",monospace}
+pre,body>code,.content-styles>code{display:block;overflow:auto;background:#18221f;color:#eaf2e8;border-radius:9px;padding:16px 18px;font:12px/1.65 "Courier New",monospace;white-space:pre-wrap}
+.content-table{margin:16px 0 22px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:480px;font-size:13px}
+th{background:var(--soft);color:var(--green);font-weight:700;text-align:left}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:18px 0;padding:12px 16px;border-left:3px solid var(--lime);background:var(--soft);color:var(--muted)}
+img{max-width:100%;height:auto;border-radius:8px}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+@media(max-width:560px){body{font-size:14px}.content-styles{padding-bottom:28px}h1{font-size:26px}h2{font-size:20px}table{min-width:420px}}
+</style>
+<div class="guide-kicker">Flowcraft / n8n workflow guide</div>

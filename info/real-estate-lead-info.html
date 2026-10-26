@@ -1,0 +1,447 @@
+<div class="guide-kicker guide-kicker-top">Flowcraft / n8n workflow guide</div>
+<div class="content-styles type-body-xl">
+  <div class="">
+    <h1>🏠 AI Real Estate Lead Qualifier — Typeform to Airtable with Smart Email Routing</h1>
+    <h3>Automatically qualify property leads, score them with AI, save to Airtable, and send personalised emails — all
+      in seconds.</h3>
+
+    <h2>📖 Description</h2>
+    <p>Every time a prospect submits your Typeform property inquiry, this workflow kicks in automatically. It extracts
+      their details, runs them through an AI lead scoring engine, saves the record to Airtable, and sends a personalised
+      email — a priority response for hot leads, a nurture email for everyone else.</p>
+    <p><strong>No manual review. No missed leads. No delayed follow-ups.</strong></p>
+    <p>This is built for real estate agencies, leasing companies, and property managers who receive inquiries through
+      Typeform and want instant, intelligent responses without hiring extra staff.</p>
+
+    <h2>✨ Key Features</h2>
+    <ul>
+      <li><strong>Instant lead capture</strong> — triggers the moment Typeform receives a submission</li>
+      <li><strong>AI lead scoring</strong> — Google Gemini classifies every lead as High, Medium, or Low automatically
+      </li>
+      <li><strong>Smart email routing</strong> — High leads get a priority response, others get a nurture sequence</li>
+      <li><strong>Airtable CRM sync</strong> — every lead saved with full details + AI assessment</li>
+      <li><strong>Robust AI parsing</strong> — 4-layer fallback system ensures AI output is always usable</li>
+      <li><strong>Personalised emails</strong> — name, property type, location, budget pulled into every email
+        automatically</li>
+      <li><strong>No-code maintenance</strong> — update scoring rules in the prompt, email copy in the nodes</li>
+    </ul>
+
+    <h2>🔄 How It Works</h2>
+    <code>Prospect submits Typeform inquiry
+          ↓
+Webhook receives the form payload
+          ↓
+Extract Typeform Fields
+  → name, email, phone, property type
+  → purpose, location, budget, requirements
+          ↓
+AI Lead Qualifier (Google Gemini)
+  → lead_score: High / Medium / Low
+  → intent, timeline, notes
+          ↓
+Parse AI Output (4-layer fallback)
+          ↓
+Save to Airtable CRM
+          ↓
+High Lead? (IF check)
+  ✅ YES → Priority Email (contact within 2 hours)
+  ❌ NO  → Nurture Email (contact within 1-2 days)
+</code>
+
+    <h2>🤖 AI Lead Scoring Rules</h2>
+    <p>The AI automatically classifies leads based on these criteria:</p>
+    <div>
+      <div class="content-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Score</th>
+              <th>Criteria</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>🔴 <strong>High</strong></td>
+              <td>Has budget + specific location + clear purpose (investment or near-term buying)</td>
+            </tr>
+            <tr>
+              <td>🟡 <strong>Medium</strong></td>
+              <td>Partial information — needs follow-up to qualify further</td>
+            </tr>
+            <tr>
+              <td>🟢 <strong>Low</strong></td>
+              <td>Vague inquiry, missing budget or location, early exploration</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>The AI also extracts:</p>
+    <ul>
+      <li><strong>Intent</strong> — what the lead is trying to achieve</li>
+      <li><strong>Timeline</strong> — how urgently they need a property</li>
+      <li><strong>Notes</strong> — assessment summary for your sales team</li>
+    </ul>
+
+    <h2>📧 Email Templates</h2>
+    <h3>High Lead Email</h3>
+    <ul>
+      <li>Subject: <code>🏠 [Name], we have properties matching your needs!</code></li>
+      <li>Dark blue header — premium feel</li>
+      <li>Full inquiry summary (property, purpose, location, budget, timeline)</li>
+      <li>AI assessment notes included</li>
+      <li>Promise: senior agent contacts within <strong>2 hours</strong></li>
+    </ul>
+    <h3>Nurture Email (Medium / Low)</h3>
+    <ul>
+      <li>Subject: <code>Thanks for reaching out, [Name]!</code></li>
+      <li>Grey header — warm and professional</li>
+      <li>Inquiry summary (property, location, budget)</li>
+      <li>Preparation tips while they wait</li>
+      <li>Promise: contact within <strong>1-2 business days</strong></li>
+    </ul>
+
+    <h2>🛠 Setup Requirements</h2>
+    <h3>1. Typeform Setup</h3>
+    <p>Create a Typeform with these fields and note their <strong>field ref IDs</strong> from the Typeform API:</p>
+    <div>
+      <div class="content-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Required</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Full Name</td>
+              <td>Short text</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Phone Number</td>
+              <td>Phone</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Email Address</td>
+              <td>Email</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Property Type</td>
+              <td>Multiple choice</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Purpose</td>
+              <td>Multiple choice</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Preferred Location</td>
+              <td>Short text</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Budget Range</td>
+              <td>Multiple choice</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Requirements</td>
+              <td>Long text</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Consent</td>
+              <td>Yes/No</td>
+              <td>Optional</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p><strong>Connect Typeform webhook:</strong></p>
+    <ul>
+      <li>Typeform Dashboard → Connect → Webhooks</li>
+      <li>URL: your n8n webhook URL (Production URL from the Webhook node)</li>
+      <li>Method: POST</li>
+    </ul>
+    <h3>2. Update Field Refs</h3>
+    <p>In the <strong>Extract Typeform Fields</strong> Code node, update the <code>REF_*</code> constants to match your
+      actual Typeform field reference IDs:</p>
+    <code>const REF_NAME     = 'your-field-ref-here';
+const REF_EMAIL    = 'your-field-ref-here';
+const REF_PHONE    = 'your-field-ref-here';
+// ... etc
+</code>
+    <p>Find your field refs from the Typeform API or by logging a test webhook payload.</p>
+    <h3>3. Airtable Setup</h3>
+    <p>Create an Airtable base with a table containing these fields:</p>
+    <div>
+      <div class="content-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Field Name</th>
+              <th>Field Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Full Name</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Email Address</td>
+              <td>Email</td>
+            </tr>
+            <tr>
+              <td>Mobile Phone Number</td>
+              <td>Phone</td>
+            </tr>
+            <tr>
+              <td>Property Type</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Purpose</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Preferred Location</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Budget Range</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Requirements</td>
+              <td>Long text</td>
+            </tr>
+            <tr>
+              <td>Submit Date</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Lead Score</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Intent</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Timeline</td>
+              <td>Single line text</td>
+            </tr>
+            <tr>
+              <td>Notes</td>
+              <td>Long text</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>Update the <strong>Save to Airtable</strong> node with your Base ID and Table ID.</p>
+    <h3>4. Credentials Required</h3>
+    <div>
+      <div class="content-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Credential</th>
+              <th>Used for</th>
+              <th>Free?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Google Gemini (PaLM) API</strong></td>
+              <td>AI lead scoring</td>
+              <td>Free tier available</td>
+            </tr>
+            <tr>
+              <td><strong>Airtable Personal Access Token</strong></td>
+              <td>CRM save</td>
+              <td>Free</td>
+            </tr>
+            <tr>
+              <td><strong>SMTP</strong></td>
+              <td>Sending emails</td>
+              <td>Depends on provider</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <h3>5. Email Configuration</h3>
+    <p>In both email nodes, update:</p>
+    <ul>
+      <li><code>fromEmail</code> — your sending address</li>
+      <li>SMTP credential — your email provider details</li>
+    </ul>
+    <p><strong>Recommended SMTP providers for testing:</strong> Mailtrap (sandbox), Gmail, SendGrid</p>
+
+    <h2>⚙️ Workflow Nodes</h2>
+    <div>
+      <div class="content-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Node</th>
+              <th>Type</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Webhook</td>
+              <td>Webhook</td>
+              <td>Receives Typeform POST payload</td>
+            </tr>
+            <tr>
+              <td>Extract Typeform Fields</td>
+              <td>Code</td>
+              <td>Parses answers by field ref ID</td>
+            </tr>
+            <tr>
+              <td>AI Lead Qualifier</td>
+              <td>AI Agent</td>
+              <td>Scores lead using Gemini</td>
+            </tr>
+            <tr>
+              <td>Google Gemini Chat Model</td>
+              <td>LLM</td>
+              <td>AI model for scoring</td>
+            </tr>
+            <tr>
+              <td>Parse AI Output</td>
+              <td>Code</td>
+              <td>Extracts JSON with 4-layer fallback</td>
+            </tr>
+            <tr>
+              <td>Save to Airtable</td>
+              <td>Airtable</td>
+              <td>Creates CRM record</td>
+            </tr>
+            <tr>
+              <td>High Lead?</td>
+              <td>IF</td>
+              <td>Routes by lead score</td>
+            </tr>
+            <tr>
+              <td>Priority Email</td>
+              <td>Email Send</td>
+              <td>Sends to High leads</td>
+            </tr>
+            <tr>
+              <td>Nurture Email</td>
+              <td>Email Send</td>
+              <td>Sends to Medium/Low leads</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>🔧 Customisation</h2>
+    <p><strong>Change scoring criteria:</strong><br>
+      Edit the prompt in the <strong>AI Lead Qualifier</strong> node. Add your own rules — e.g. score higher if budget
+      exceeds a threshold, or if the purpose is investment.</p>
+    <p><strong>Add more email tiers:</strong><br>
+      Add a third IF branch for Low leads with a different nurture sequence, or add a Slack/WhatsApp alert for High
+      leads.</p>
+    <p><strong>Use a different form:</strong><br>
+      The <strong>Extract Typeform Fields</strong> node uses Typeform's <code>field.ref</code> system. Replace it with a
+      Google Forms or Jotform parser by adjusting how you read the incoming webhook body.</p>
+    <p><strong>Change the AI model:</strong><br>
+      Replace the Google Gemini node with Claude, OpenAI, or any other LLM Chat Model node — no other changes needed.
+    </p>
+    <p><strong>Add lead deduplication:</strong><br>
+      Before saving to Airtable, add a search step to check if the email already exists and skip or update instead of
+      creating a duplicate.</p>
+
+    <h2>🛡 Robustness Features</h2>
+    <p>The <strong>Parse AI Output</strong> node uses a 4-layer fallback to ensure the workflow never breaks due to AI
+      formatting issues:</p>
+    <ol>
+      <li><strong>Direct JSON parse</strong> — if Gemini returns clean JSON</li>
+      <li><strong>Strip markdown fences</strong> — if Gemini wraps in ```json blocks</li>
+      <li><strong>Regex JSON extraction</strong> — if there's extra text around the JSON</li>
+      <li><strong>Field-by-field regex</strong> — if JSON is malformed, extracts each field individually</li>
+      <li><strong>Default fallback</strong> — if all else fails, sets <code>lead_score: Medium</code></li>
+    </ol>
+    <p>This means the workflow continues and saves the record even if the AI returns unexpected output.</p>
+
+    <h2>📊 Sample Airtable Record</h2>
+    <code>Full Name:         Sarah Johnson
+Email Address:     sarah@example.com
+Mobile Phone:      +91 9876543210
+Property Type:     2BHK Apartment
+Purpose:           Investment
+Preferred Location: Bandra, Mumbai
+Budget Range:      ₹80L - ₹1.2Cr
+Requirements:      Parking, gym, sea view
+Submit Date:       2026-03-18T10:30:00Z
+Lead Score:        High
+Intent:            Serious buyer looking for investment property with strong rental yield
+Timeline:          Within 3 months
+Notes:             High-intent lead with clear budget and location. Has specific amenity requirements. Recommend immediate callback.
+</code>
+
+    <h2>📦 Requirements Summary</h2>
+    <ul>
+      <li>n8n (cloud or self-hosted)</li>
+      <li>Typeform account (any paid plan for webhooks)</li>
+      <li>Airtable account (free tier works)</li>
+      <li>Google AI Studio account for Gemini API key (free tier available)</li>
+      <li>SMTP email account</li>
+    </ul>
+
+    <h2>💡 Enhancement Ideas</h2>
+    <ul>
+      <li><strong>WhatsApp alert</strong> — send instant WhatsApp to sales team for every High lead via Twilio</li>
+      <li><strong>Calendar booking link</strong> — include a Calendly link in the High lead email</li>
+      <li><strong>Lead follow-up reminder</strong> — add a Wait node + reminder email if no reply in 48 hours</li>
+      <li><strong>Slack notification</strong> — ping your team channel instantly for High leads</li>
+      <li><strong>Lead scoring dashboard</strong> — connect Airtable to a dashboard tool for weekly reports</li>
+    </ul>
+
+    <p><em>Built with n8n · Google Gemini AI · Typeform · Airtable · SMTP</em></p>
+  </div>
+</div>
+<style>
+:root{--paper:#f5f7f2;--ink:#18221f;--muted:#53635c;--line:#dbe3dc;--green:#1e5844;--soft:#edf3eb;--lime:#d7f36b}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"DM Sans",sans-serif;font-size:15px;line-height:1.7}
+.content-styles{max-width:720px;margin:0 auto;padding:4px 0 44px}
+.guide-kicker{max-width:720px;margin:0 auto 8px;color:var(--green);font:600 11px "Courier New",monospace;letter-spacing:.12em;text-transform:uppercase}
+.content-styles ~ .guide-kicker{display:none}
+h1,h2,h3,h4{color:var(--ink);font-family:Arial,"DM Sans",sans-serif;letter-spacing:-.035em;line-height:1.2}
+h1{font-size:32px;margin:0 0 14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h2{font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:24px 0 7px}
+p,li{color:var(--muted)}
+strong{color:var(--ink)}
+a{color:var(--green);font-weight:600}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+code{background:#e5eee5;border:1px solid #d6e4d6;border-radius:5px;color:var(--green);padding:2px 6px;font:13px "Courier New",monospace}
+pre,body>code,.content-styles>code{display:block;overflow:auto;background:#18221f;color:#eaf2e8;border-radius:9px;padding:16px 18px;font:12px/1.65 "Courier New",monospace;white-space:pre-wrap}
+.content-table{margin:16px 0 22px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:480px;font-size:13px}
+th{background:var(--soft);color:var(--green);font-weight:700;text-align:left}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:18px 0;padding:12px 16px;border-left:3px solid var(--lime);background:var(--soft);color:var(--muted)}
+img{max-width:100%;height:auto;border-radius:8px}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+@media(max-width:560px){body{font-size:14px}.content-styles{padding-bottom:28px}h1{font-size:26px}h2{font-size:20px}table{min-width:420px}}
+</style>
+<div class="guide-kicker">Flowcraft / n8n workflow guide</div>

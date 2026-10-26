@@ -1,0 +1,438 @@
+<div class="guide-kicker guide-kicker-top">Flowcraft / n8n workflow guide</div>
+<div class="content-styles type-body-xl">
+    <div class="">
+        <h1>💰 AI Expense Tracker — Chat to Track Spending Instantly</h1>
+        <h3>Track your expenses by chatting naturally. No forms, no apps — just type and it's saved.</h3>
+
+        <h2>📖 Description</h2>
+        <p>This workflow turns a simple chat interface into a powerful personal expense tracker. Just describe your
+            spending in plain language — the AI understands it, categorizes it, and saves it to Google Sheets
+            automatically.</p>
+        <p><strong>Example inputs the AI understands:</strong></p>
+        <ul>
+            <li><code>spent 500 on lunch</code></li>
+            <li><code>uber 150</code></li>
+            <li><code>paid 1200 electricity bill</code></li>
+            <li><code>lunch in feb 25 cost 500</code> ← handles past dates too</li>
+            <li><code>netflix 499</code></li>
+            <li><code>$50 hotel booking</code> ← detects currency</li>
+        </ul>
+        <p>No rigid formats. No dropdowns. Just type naturally.</p>
+
+        <h2>✨ Key Features</h2>
+        <ul>
+            <li><strong>Natural language input</strong> — type expenses exactly how you'd say them</li>
+            <li><strong>AI-powered parsing</strong> — Claude Haiku extracts amount, category, date, currency
+                automatically</li>
+            <li><strong>9 auto-detected categories</strong> — Food, Transport, Shopping, Bills, Entertainment, Health,
+                Business, Education, Other</li>
+            <li><strong>Multi-currency support</strong> — INR, USD, EUR, GBP</li>
+            <li><strong>Past date handling</strong> — "lunch in feb 25 cost 500" saves to February 2025, not today</li>
+            <li><strong>Running monthly total</strong> — each row stores the cumulative month total</li>
+            <li><strong>Monthly summary</strong> — type <code>SUMMARY</code> or <code>summary february</code> for any
+                month</li>
+            <li><strong>Works on empty sheet</strong> — no errors on first use</li>
+            <li><strong>Invalid input handling</strong> — friendly error if no amount detected</li>
+        </ul>
+
+        <h2>💬 Commands</h2>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>What you type</th>
+                            <th>What happens</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>spent 500 on lunch</code></td>
+                            <td>✅ Saved: 🍕 Food &amp; Dining — Lunch · ₹500</td>
+                        </tr>
+                        <tr>
+                            <td><code>uber 150</code></td>
+                            <td>✅ Saved: 🚗 Transport — Uber · ₹150</td>
+                        </tr>
+                        <tr>
+                            <td><code>1200 electricity bill</code></td>
+                            <td>✅ Saved: 💡 Bills &amp; Utilities · ₹1200</td>
+                        </tr>
+                        <tr>
+                            <td><code>lunch in feb 25 cost 500</code></td>
+                            <td>✅ Saved to February 2025 correctly</td>
+                        </tr>
+                        <tr>
+                            <td><code>SUMMARY</code></td>
+                            <td>📊 Current month report with breakdown</td>
+                        </tr>
+                        <tr>
+                            <td><code>summary february</code></td>
+                            <td>📊 February report (current year)</td>
+                        </tr>
+                        <tr>
+                            <td><code>summary february 2025</code></td>
+                            <td>📊 February 2025 specific report</td>
+                        </tr>
+                        <tr>
+                            <td><code>HELP</code></td>
+                            <td>📖 Shows all commands and categories</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2>🛠 Setup Requirements</h2>
+        <h3>1. Google Sheet</h3>
+        <p>Create a new Google Sheet with these exact headers in Row 1:</p>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Col</th>
+                            <th>Header</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>A</td>
+                            <td><code>Date</code></td>
+                        </tr>
+                        <tr>
+                            <td>B</td>
+                            <td><code>Amount</code></td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td><code>Category</code></td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td><code>Description</code></td>
+                        </tr>
+                        <tr>
+                            <td>E</td>
+                            <td><code>Currency</code></td>
+                        </tr>
+                        <tr>
+                            <td>F</td>
+                            <td><code>Month</code></td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td><code>Raw Message</code></td>
+                        </tr>
+                        <tr>
+                            <td>H</td>
+                            <td><code>Total</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <h3>2. Credentials needed</h3>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Credential</th>
+                            <th>Used for</th>
+                            <th>Free?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Anthropic API</strong></td>
+                            <td>Claude Haiku AI parsing</td>
+                            <td>Paid (very low cost)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Google Sheets OAuth2</strong></td>
+                            <td>Read &amp; write expenses</td>
+                            <td>Free</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <h3>3. After importing</h3>
+        <ol>
+            <li>Connect your <strong>Anthropic</strong> credential to the <code>Claude Haiku</code> node</li>
+            <li>Connect your <strong>Google Sheets</strong> credential to all sheet nodes</li>
+            <li>Update the Sheet ID in all Google Sheets nodes to point to your sheet</li>
+            <li>Open the workflow chat and type your first expense</li>
+        </ol>
+
+        <h2>🏗 How It Works</h2>
+        <code>You type: "spent 500 on car wash"
+        ↓
+Detect Intent  →  classified as: expense
+        ↓
+Read All Expenses  →  loads sheet (works even if empty)
+        ↓
+Prepare Data  →  calculates existing month total
+        ↓
+AI Parse Expense (Claude Haiku)
+  →  amount: 500
+  →  category: Transport
+  →  description: Car wash
+  →  date: today
+  →  currency: INR
+        ↓
+Parse &amp; Total
+  →  derives Month from parsed date
+  →  computes new running total
+        ↓
+Is Valid? (amount &amp;gt; 0 and is_expense = true)
+  ✅ YES → Save to Sheet → Reply with confirmation
+  ❌ NO  → Ask user to include an amount
+</code>
+        <p><strong>Summary flow:</strong></p>
+        <code>You type: "summary february"
+        ↓
+Detect Intent  →  classified as: summary
+        ↓
+Read for Summary  →  loads all rows
+        ↓
+Build Summary
+  →  detects "february" in message
+  →  filters rows by February (current year)
+  →  calculates total, breakdown by category, daily avg
+        ↓
+Returns formatted report
+</code>
+
+        <h2>📊 Sample Summary Output</h2>
+        <code>📊 March 2026 Report
+
+💳 Total: ₹8,450
+📝 Entries: 12
+📈 Daily avg: ₹470
+🔝 Top: 🍕 Food &amp; Dining
+
+Breakdown:
+🍕 Food &amp; Dining: ₹3,200 (38%)
+🚗 Transport: ₹1,800 (21%)
+💡 Bills &amp; Utilities: ₹1,200 (14%)
+🛍️ Shopping: ₹1,050 (12%)
+🎬 Entertainment: ₹800 (9%)
+🏥 Health: ₹400 (5%)
+</code>
+
+        <h2>📂 Auto-Detected Categories</h2>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Emoji</th>
+                            <th>Category</th>
+                            <th>Example keywords</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🍕</td>
+                            <td>Food &amp; Dining</td>
+                            <td>lunch, dinner, restaurant, zomato, swiggy, grocery</td>
+                        </tr>
+                        <tr>
+                            <td>🚗</td>
+                            <td>Transport</td>
+                            <td>uber, ola, petrol, metro, flight, car wash, parking</td>
+                        </tr>
+                        <tr>
+                            <td>🛍️</td>
+                            <td>Shopping</td>
+                            <td>amazon, flipkart, clothes, electronics, shoes</td>
+                        </tr>
+                        <tr>
+                            <td>💡</td>
+                            <td>Bills &amp; Utilities</td>
+                            <td>electricity, wifi, rent, recharge, emi, gas</td>
+                        </tr>
+                        <tr>
+                            <td>🎬</td>
+                            <td>Entertainment</td>
+                            <td>netflix, movie, spotify, concert, gaming</td>
+                        </tr>
+                        <tr>
+                            <td>🏥</td>
+                            <td>Health</td>
+                            <td>medicine, doctor, gym, pharmacy, hospital</td>
+                        </tr>
+                        <tr>
+                            <td>💼</td>
+                            <td>Business</td>
+                            <td>office, software, domain, hosting, tools</td>
+                        </tr>
+                        <tr>
+                            <td>📚</td>
+                            <td>Education</td>
+                            <td>course, books, tuition, udemy, fees</td>
+                        </tr>
+                        <tr>
+                            <td>💰</td>
+                            <td>Other</td>
+                            <td>anything that doesn't match above</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2>⚙️ Workflow Nodes</h2>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Node</th>
+                            <th>Type</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>When chat message received</td>
+                            <td>Chat Trigger</td>
+                            <td>Entry point</td>
+                        </tr>
+                        <tr>
+                            <td>Detect Intent</td>
+                            <td>Code</td>
+                            <td>Classify: expense / summary / help</td>
+                        </tr>
+                        <tr>
+                            <td>Intent Switch</td>
+                            <td>Switch</td>
+                            <td>Route to correct path</td>
+                        </tr>
+                        <tr>
+                            <td>Read All Expenses</td>
+                            <td>Google Sheets</td>
+                            <td>Load rows (alwaysOutputData: true)</td>
+                        </tr>
+                        <tr>
+                            <td>Prepare Data</td>
+                            <td>Code</td>
+                            <td>Compute month total, handle empty sheet</td>
+                        </tr>
+                        <tr>
+                            <td>AI Parse Expense</td>
+                            <td>LLM Chain</td>
+                            <td>Extract fields using Claude Haiku</td>
+                        </tr>
+                        <tr>
+                            <td>Claude Haiku</td>
+                            <td>Anthropic Model</td>
+                            <td>AI model for parsing</td>
+                        </tr>
+                        <tr>
+                            <td>Parse &amp; Total</td>
+                            <td>Code</td>
+                            <td>Validate, derive month, compute total</td>
+                        </tr>
+                        <tr>
+                            <td>Is Valid Expense?</td>
+                            <td>IF</td>
+                            <td>Check amount &gt; 0</td>
+                        </tr>
+                        <tr>
+                            <td>Save Expense to Sheet</td>
+                            <td>Google Sheets</td>
+                            <td>Append new row</td>
+                        </tr>
+                        <tr>
+                            <td>Reply Saved</td>
+                            <td>Code</td>
+                            <td>Format confirmation message</td>
+                        </tr>
+                        <tr>
+                            <td>Reply Invalid</td>
+                            <td>Code</td>
+                            <td>Request amount from user</td>
+                        </tr>
+                        <tr>
+                            <td>Read for Summary</td>
+                            <td>Google Sheets</td>
+                            <td>Load all rows for report</td>
+                        </tr>
+                        <tr>
+                            <td>Build Summary</td>
+                            <td>Code</td>
+                            <td>Filter by month, compute breakdown</td>
+                        </tr>
+                        <tr>
+                            <td>Send Help</td>
+                            <td>Code</td>
+                            <td>Return command reference</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2>🔧 Customisation Ideas</h2>
+        <ul>
+            <li><strong>Add a budget alert</strong> — warn when monthly total exceeds a set limit</li>
+            <li><strong>Telegram integration</strong> — replace chat trigger with Telegram bot</li>
+            <li><strong>WhatsApp integration</strong> — use Twilio WhatsApp as the input channel</li>
+            <li><strong>Weekly digest</strong> — add a Schedule Trigger for automatic weekly reports</li>
+            <li><strong>Multi-user</strong> — store user ID with each row to support team expense tracking</li>
+            <li><strong>Export to PDF</strong> — generate monthly expense report as a PDF</li>
+        </ul>
+
+        <h2>⚠️ Important Notes</h2>
+        <ul>
+            <li>The <code>Read All Expenses</code> node has <strong>Always Output Data</strong> enabled — this is
+                required so the flow works on an empty sheet</li>
+            <li>Month is derived from the <strong>parsed date</strong>, not today's date — so past-dated entries file
+                correctly</li>
+            <li>The <code>Total</code> column stores the running month total at the time of each entry — it does not
+                update retroactively if you delete rows</li>
+        </ul>
+
+        <h2>📦 Requirements Summary</h2>
+        <ul>
+            <li>n8n (cloud or self-hosted)</li>
+            <li>Anthropic API key (Claude Haiku — very low token usage)</li>
+            <li>Google account with Sheets access</li>
+        </ul>
+
+        <p><em>Built with n8n · Claude Haiku · Google Sheets By Nirav Gajera</em></p>
+    </div>
+</div>
+<style>
+:root{--paper:#f5f7f2;--ink:#18221f;--muted:#53635c;--line:#dbe3dc;--green:#1e5844;--soft:#edf3eb;--lime:#d7f36b}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"DM Sans",sans-serif;font-size:15px;line-height:1.7}
+.content-styles{max-width:720px;margin:0 auto;padding:4px 0 44px}
+.guide-kicker{max-width:720px;margin:0 auto 8px;color:var(--green);font:600 11px "Courier New",monospace;letter-spacing:.12em;text-transform:uppercase}
+.content-styles ~ .guide-kicker{display:none}
+h1,h2,h3,h4{color:var(--ink);font-family:Arial,"DM Sans",sans-serif;letter-spacing:-.035em;line-height:1.2}
+h1{font-size:32px;margin:0 0 14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h2{font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:24px 0 7px}
+p,li{color:var(--muted)}
+strong{color:var(--ink)}
+a{color:var(--green);font-weight:600}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+code{background:#e5eee5;border:1px solid #d6e4d6;border-radius:5px;color:var(--green);padding:2px 6px;font:13px "Courier New",monospace}
+pre,body>code,.content-styles>code{display:block;overflow:auto;background:#18221f;color:#eaf2e8;border-radius:9px;padding:16px 18px;font:12px/1.65 "Courier New",monospace;white-space:pre-wrap}
+.content-table{margin:16px 0 22px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:480px;font-size:13px}
+th{background:var(--soft);color:var(--green);font-weight:700;text-align:left}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:18px 0;padding:12px 16px;border-left:3px solid var(--lime);background:var(--soft);color:var(--muted)}
+img{max-width:100%;height:auto;border-radius:8px}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+@media(max-width:560px){body{font-size:14px}.content-styles{padding-bottom:28px}h1{font-size:26px}h2{font-size:20px}table{min-width:420px}}
+</style>
+<div class="guide-kicker">Flowcraft / n8n workflow guide</div>

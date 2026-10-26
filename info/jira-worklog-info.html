@@ -1,0 +1,137 @@
+<div class="guide-kicker guide-kicker-top">Flowcraft / n8n workflow guide</div>
+<div class="content-styles type-body-xl">
+    <div class="">
+        <h1>Jira Daily Worklog Automation — Auto-log Time from Google Sheets to Jira Every Night</h1>
+        <p>Automatically logs time to Jira every night from a Google Sheet. No manual worklog entries needed — just fill
+            in your sheet and the workflow handles the rest at 10 PM.</p>
+        <p>Built for developers and teams who track their daily tasks in a spreadsheet and want their Jira time entries
+            done automatically, with a clean email report.</p>
+
+        <h2>How It Works</h2>
+        <ul>
+            <li>Runs every night at <strong>10 PM</strong> via a Schedule Trigger</li>
+            <li>Reads all rows from your Google Sheet and filters rows where <code>status = Pending</code> and
+                <code>date &amp;lt;= today</code></li>
+            <li>Loops through each pending row one at a time using <code>splitInBatches</code></li>
+            <li>Builds the Jira worklog payload — normalises time format, constructs the ISO timestamp from
+                <code>date</code> + <code>started_at</code></li>
+            <li>Calls the <strong>Jira REST API</strong> (<code>POST /rest/api/3/issue/ticket_id/worklog</code>) with
+                Basic Auth</li>
+            <li>Updates the sheet row status to <code>Completed</code> or keeps it <code>Pending</code> with an error
+                message and incremented <code>retry_count</code></li>
+            <li>After all rows are processed, reads results from static data and builds a summary</li>
+            <li><strong>GPT-4o-mini</strong> writes a friendly 2–3 sentence team update</li>
+            <li>Sends a formatted <strong>HTML email report</strong> via Gmail with success count, fail count, total
+                time logged, and the AI summary</li>
+        </ul>
+
+        <h2>How to Use</h2>
+        <p><strong>Step 1 — Set up your Google Sheet</strong></p>
+        <p>Create a sheet with these exact column headers in row 1:</p>
+        <div>
+            <div class="content-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ticket_id</th>
+                            <th>log_text</th>
+                            <th>date</th>
+                            <th>started_at</th>
+                            <th>log_time</th>
+                            <th>status</th>
+                            <th>error_message</th>
+                            <th>retry_count</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <ul>
+            <li><code>ticket_id</code> — your Jira issue key e.g. <code>PROJ-123</code></li>
+            <li><code>log_text</code> — worklog comment e.g. <code>Reviewed PR and fixed unit tests</code></li>
+            <li><code>date</code> — date to log against e.g. <code>2026-04-02</code></li>
+            <li><code>started_at</code> — time the work started e.g. <code>09:30</code></li>
+            <li><code>log_time</code> — time spent e.g. <code>1h</code>, <code>30m</code>, <code>1h30m</code></li>
+            <li><code>status</code> — set to <code>pending</code> for rows to be processed</li>
+            <li><code>error_message</code> — auto-filled on failure</li>
+            <li><code>retry_count</code> — auto-incremented on failure</li>
+        </ul>
+        <p><strong>Step 2 — Add credentials in n8n</strong></p>
+        <ul>
+            <li><strong>Google Sheets OAuth2</strong> — connect your Google account</li>
+            <li><strong>Gmail OAuth2</strong> — connect your Gmail account for email reports</li>
+            <li><strong>HTTP Basic Auth</strong> — your Jira email + API token (get token at <a
+                    href="https://id.atlassian.com/manage-profile/security/api-tokens" rel="ugc nofollow"
+                    target="_blank">id.atlassian.com/manage-profile/security/api-tokens</a>)</li>
+            <li><strong>OpenAI API</strong> — for the AI summary (GPT-4o-mini)</li>
+        </ul>
+        <p><strong>Step 3 — Update the workflow</strong></p>
+        <ul>
+            <li>Open the <code>Read Log Sheet</code> node and select your spreadsheet and sheet tab</li>
+            <li>Open the <code>Update Sheet</code> node and do the same</li>
+            <li>Open <code>Jira: Add Worklog</code> and update the Atlassian domain in the URL:
+                <code>https://YOUR-DOMAIN.atlassian.net/...</code></li>
+            <li>Open both Gmail nodes and update the <code>sendTo</code> email address</li>
+            <li>Select your HTTP Basic Auth credential in <code>Jira: Add Worklog</code></li>
+        </ul>
+        <p><strong>Step 4 — Activate</strong></p>
+        <p>Toggle the workflow to <strong>Active</strong>. It will run automatically every night at 10 PM.</p>
+        <p>To test immediately, open the workflow and click <strong>Test Workflow</strong>.</p>
+
+        <h2>Requirements</h2>
+        <ul>
+            <li>n8n (self-hosted or cloud)</li>
+            <li>Google account with Google Sheets + Gmail</li>
+            <li>Jira Cloud account with an API token</li>
+            <li>OpenAI API key (free tier works for low volume)</li>
+        </ul>
+
+        <h2>Customising This Workflow</h2>
+        <ul>
+            <li><strong>Change the schedule</strong> — edit the cron expression in the trigger node. Examples are in the
+                sticky note</li>
+            <li><strong>Change the Jira domain</strong> — update the URL in <code>Jira: Add Worklog</code> to your
+                Atlassian subdomain</li>
+            <li><strong>Use Telegram instead of Gmail</strong> — replace both Gmail nodes with a Telegram node using
+                <code>chatId</code> and <code>text</code></li>
+            <li><strong>Skip the AI summary</strong> — delete the <code>AI Summary</code> node and wire
+                <code>Build Summary</code> directly to the Gmail node; update the email template to remove
+                <code>$json.message.content</code></li>
+            <li><strong>Add multiple projects</strong> — the sheet supports any mix of ticket IDs from different Jira
+                projects in the same run</li>
+            <li><strong>Catch missed past days</strong> — the filter already picks up rows where
+                <code>date &amp;lt; today</code>, so any past pending rows are automatically retried on the next run
+            </li>
+        </ul>
+    </div>
+</div>
+<style>
+:root{--paper:#f5f7f2;--ink:#18221f;--muted:#53635c;--line:#dbe3dc;--green:#1e5844;--soft:#edf3eb;--lime:#d7f36b}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"DM Sans",sans-serif;font-size:15px;line-height:1.7}
+.content-styles{max-width:720px;margin:0 auto;padding:4px 0 44px}
+.guide-kicker{max-width:720px;margin:0 auto 8px;color:var(--green);font:600 11px "Courier New",monospace;letter-spacing:.12em;text-transform:uppercase}
+.content-styles ~ .guide-kicker{display:none}
+h1,h2,h3,h4{color:var(--ink);font-family:Arial,"DM Sans",sans-serif;letter-spacing:-.035em;line-height:1.2}
+h1{font-size:32px;margin:0 0 14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h2{font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:24px 0 7px}
+p,li{color:var(--muted)}
+strong{color:var(--ink)}
+a{color:var(--green);font-weight:600}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+code{background:#e5eee5;border:1px solid #d6e4d6;border-radius:5px;color:var(--green);padding:2px 6px;font:13px "Courier New",monospace}
+pre,body>code,.content-styles>code{display:block;overflow:auto;background:#18221f;color:#eaf2e8;border-radius:9px;padding:16px 18px;font:12px/1.65 "Courier New",monospace;white-space:pre-wrap}
+.content-table{margin:16px 0 22px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:480px;font-size:13px}
+th{background:var(--soft);color:var(--green);font-weight:700;text-align:left}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:18px 0;padding:12px 16px;border-left:3px solid var(--lime);background:var(--soft);color:var(--muted)}
+img{max-width:100%;height:auto;border-radius:8px}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+@media(max-width:560px){body{font-size:14px}.content-styles{padding-bottom:28px}h1{font-size:26px}h2{font-size:20px}table{min-width:420px}}
+</style>
+<div class="guide-kicker">Flowcraft / n8n workflow guide</div>
