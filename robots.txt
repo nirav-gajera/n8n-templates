@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /templates/
+
+Sitemap: https://niravgajera.indevs.in/n8n-templates/sitemap.xml
