@@ -1,0 +1,10 @@
+{
+  "name": "Flowcraft — n8n Workflow Templates",
+  "short_name": "Flowcraft",
+  "description": "Production-ready n8n workflow templates by Nirav Gajera.",
+  "start_url": "/n8n-templates/",
+  "display": "standalone",
+  "background_color": "#f5f7f2",
+  "theme_color": "#1e5844",
+  "icons": []
+}
